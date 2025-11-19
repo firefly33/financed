@@ -1,0 +1,16 @@
+node_modules
+dist
+npm-debug.log
+.env
+.git
+.gitignore
+README.md
+.vscode
+.idea
+coverage
+*.md
+.eslintrc.js
+.prettierrc
+cucumber-report.html
+features
+test
