@@ -23,7 +23,6 @@ import { SpendingLimitController } from './infrastructure/adapters/http/spending
     CreateExpenseUseCase,
     GetMonthlyExpensesUseCase,
     GetSpendingSummaryUseCase,
-    InMemorySpendingLimitRepository,
   ],
 })
 export class AppModule {}

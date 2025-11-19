@@ -1,10 +1,12 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { InMemorySpendingLimitRepository } from '../../repositories/in-memory-spending-limit.repository';
+import { Controller, Post, Body, Inject } from '@nestjs/common';
+import type { ISpendingLimitRepository } from '../../../domain/ports/spending-limit.repository.interface';
+import { SPENDING_LIMIT_REPOSITORY } from '../../../domain/ports/spending-limit.repository.interface';
 
 @Controller('spending-limits')
 export class SpendingLimitController {
   constructor(
-    private readonly spendingLimitRepository: InMemorySpendingLimitRepository,
+    @Inject(SPENDING_LIMIT_REPOSITORY)
+    private readonly spendingLimitRepository: ISpendingLimitRepository,
   ) {}
 
   @Post()
