@@ -16,8 +16,13 @@ When reviewing code in the Finance Manager project, check the following:
 - [ ] Are components properly decomposed?
 - [ ] Is TypeScript used for type safety?
 - [ ] Are props typed with interfaces?
-- [ ] Is state management appropriate?
-- [ ] Are side effects in useEffect?
+- [ ] Are custom hooks used for reusable logic?
+- [ ] Is TanStack Query used for ALL server data?
+- [ ] Are API calls in Service files (not components/hooks)?
+- [ ] Do components use hooks (not services directly)?
+- [ ] Are query keys properly structured?
+- [ ] Are mutations invalidating queries?
+- [ ] Are loading/error states handled?
 
 ## Testing
 

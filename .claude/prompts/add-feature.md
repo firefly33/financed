@@ -128,36 +128,136 @@ export interface YourType {
   field1: string;
   field2: number;
 }
+
+export interface CreateYourTypeDto {
+  field1: string;
+  field2: number;
+}
 ```
 
-### 2. Create Service
-In `frontend/src/services/`:
+### 2. Create Service (API Layer)
+**IMPORTANT:** All API calls must be in Service files
+
+In `frontend/src/services/your.service.ts`:
 ```typescript
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 export class YourService {
-  async getData(id: string): Promise<YourType> {
+  // GET request
+  async getById(id: string): Promise<YourType> {
     const response = await fetch(`${API_BASE_URL}/your-route/${id}`);
     if (!response.ok) throw new Error('Failed to fetch');
     return response.json();
   }
+
+  // GET list
+  async getAll(): Promise<YourType[]> {
+    const response = await fetch(`${API_BASE_URL}/your-route`);
+    if (!response.ok) throw new Error('Failed to fetch');
+    return response.json();
+  }
+
+  // POST request
+  async create(data: CreateYourTypeDto): Promise<YourType> {
+    const response = await fetch(`${API_BASE_URL}/your-route`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create');
+    return response.json();
+  }
+}
+
+export const yourService = new YourService();
+```
+
+### 3. Create Custom Hook with TanStack Query
+**IMPORTANT:** Use TanStack Query for all server data
+
+In `frontend/src/hooks/useYourData.ts`:
+```typescript
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { yourService } from '../services/your.service';
+import type { YourType, CreateYourTypeDto } from '../types/your';
+
+// Query hook for fetching data
+export function useYourData(id: string) {
+  return useQuery({
+    queryKey: ['yourData', id],
+    queryFn: () => yourService.getById(id),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+// Query hook for fetching list
+export function useYourDataList() {
+  return useQuery({
+    queryKey: ['yourDataList'],
+    queryFn: () => yourService.getAll(),
+  });
+}
+
+// Mutation hook for creating data
+export function useCreateYourData() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateYourTypeDto) => yourService.create(data),
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['yourDataList'] });
+    },
+  });
 }
 ```
 
-### 3. Write Component Test
+### 4. Write Component Test
 In `frontend/src/components/YourComponent.test.tsx`:
 ```typescript
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return ({ children }) => (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+};
+
 describe('YourComponent', () => {
-  it('should render correctly', () => {
-    render(<YourComponent />);
-    expect(screen.getByText('...')).toBeInTheDocument();
+  it('should fetch data', async () => {
+    const { result } = renderHook(() => useYourData('123'), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBeDefined();
   });
 });
 ```
 
-### 4. Create Component
+### 5. Create Component
+**IMPORTANT:** Use custom hooks, never call services directly
+
 In `frontend/src/components/YourComponent.tsx`:
 ```typescript
+import { useYourDataList, useCreateYourData } from '../hooks/useYourData';
+
 export function YourComponent() {
-  const [data, setData] = useState<YourType | null>(null);
+  const { data, isLoading, error } = useYourDataList();
+  const createMutation = useCreateYourData();
+
+  const handleCreate = async (formData: CreateYourTypeDto) => {
+    await createMutation.mutateAsync(formData);
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div className="bg-white rounded-lg p-6 shadow-md">
@@ -165,9 +265,31 @@ export function YourComponent() {
         Your Title
       </h2>
       {/* Your UI with Tailwind classes */}
+      {data?.map(item => (
+        <div key={item.id}>{item.field1}</div>
+      ))}
     </div>
   );
 }
+```
+
+### 6. Setup QueryClient (if not already done)
+In `frontend/src/main.tsx`:
+```typescript
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+      retry: 1,
+    },
+  },
+});
+
+<QueryClientProvider client={queryClient}>
+  <App />
+</QueryClientProvider>
 ```
 
 ## Testing Workflow

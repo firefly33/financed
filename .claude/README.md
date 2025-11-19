@@ -35,17 +35,25 @@ backend/src/
 - **Framework**: React 19 with TypeScript
 - **Styling**: Tailwind CSS
 - **Build Tool**: Vite
+- **State Management**: TanStack Query for server state
 - **Testing**: Vitest + React Testing Library
 
 **Directory Structure:**
 ```
 frontend/src/
 ├── components/      # React components
-├── services/        # API clients
+├── services/        # API clients (all API calls go here)
+├── hooks/          # Custom React hooks
 ├── types/          # TypeScript interfaces
-├── hooks/          # Custom React hooks (future)
 └── test/           # Test utilities
 ```
+
+**Frontend Rules:**
+1. **Custom Hooks**: Extract reusable logic into custom hooks
+2. **TanStack Query**: Use for all async server data (fetching, caching, mutations)
+3. **Services**: All API calls must be in Service files (e.g., expense.service.ts)
+4. **No Direct Fetch**: Components should never call fetch/axios directly
+5. **Hook Naming**: Custom hooks must start with `use` (e.g., useExpenses)
 
 **Design System:**
 - Color scheme: Slate/Blue
